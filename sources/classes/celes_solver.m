@@ -50,12 +50,6 @@ classdef celes_solver
         %> for type='GMRES': restart parameter
         restart=10;
         
-        %> for monitor=true, the progress of the solver can be seen in the
-        %> terminal. For that case, a modified version of the solvers
-        %> downlowaded from Matlab Stack Exchange will be employed instead
-        %> of the matlab built-in algorithms
-        monitor=true;
-        
         %> celes_preconditioner object for faster convergency of solver
         preconditioner=celes_preconditioner;
     end
@@ -84,17 +78,11 @@ classdef celes_solver
             end
             switch obj.type
                 case 'BiCGStab'
-                    if obj.monitor
-                        [value,~,~,~,convergenceHistory] = bicgstab_custom(mmm,rhs,obj.tolerance,obj.maxIter,prh,[],initial_guess);
-                    else
-                        [value,~,~,~,convergenceHistory] = bicgstab(mmm,rhs,obj.tolerance,obj.maxIter,prh,[],initial_guess);
-                    end
+                    [value,~,~,~,convergenceHistory] = bicgstab_custom(mmm,rhs,obj.tolerance,obj.maxIter,prh,[],initial_guess);
                 case 'GMRES'
-                    if obj.monitor
-                        [value,~,~,~,convergenceHistory] = gmres_custom(mmm,rhs,obj.restart,obj.tolerance,obj.maxIter,prh,[],initial_guess);
-                    else
-                        [value,~,~,~,convergenceHistory] = gmres(mmm,rhs,obj.restart,obj.tolerance,obj.maxIter,prh,[],initial_guess);
-                    end
+                    [value,~,~,~,convergenceHistory] = gmres(mmm,rhs,obj.restart,obj.tolerance,obj.maxIter,prh,[],initial_guess);
+                case 'FGMRES'
+                    [value,~,~,~,convergenceHistory] = fgmres_TTtoolbox_wrapper(mmm,rhs,obj.restart,obj.tolerance,obj.maxIter,prh,[],initial_guess);
             end
         end
     end
