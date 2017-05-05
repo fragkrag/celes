@@ -70,9 +70,9 @@ classdef celes_solver
         %> an approximation to the solution of the linear system
         % ======================================================================
         function [value,convergenceHistory] = run(obj,mmm,rhs,varargin)
-            prh = @(x) obj.preconditioner.run(x);
+            prh = @(x) gather(obj.preconditioner.run(x));
             if isempty(varargin)
-                initial_guess=rhs;
+                initial_guess=gather(rhs);
             else
                 initial_guess=varargin{1};
             end
@@ -80,7 +80,7 @@ classdef celes_solver
                 case 'BiCGStab'
                     [value,~,~,~,convergenceHistory] = bicgstab_custom(mmm,rhs,obj.tolerance,obj.maxIter,prh,[],initial_guess);
                 case 'GMRES'
-                    [value,~,~,~,convergenceHistory] = gmres(mmm,rhs,obj.restart,obj.tolerance,obj.maxIter,prh,[],initial_guess);
+                    [value,~,~,~,convergenceHistory] = gmres(mmm,gather(rhs),obj.restart,obj.tolerance,obj.maxIter,prh,[],initial_guess);
                 case 'FGMRES'
                     [value,~,~,~,convergenceHistory] = fgmres_TTtoolbox_wrapper(mmm,rhs,obj.restart,obj.tolerance,obj.maxIter,prh,[],initial_guess);
             end

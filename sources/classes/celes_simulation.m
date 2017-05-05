@@ -292,6 +292,7 @@ classdef celes_simulation
             Wx=reshape(Wx,obj.input.particles.number,obj.numerics.nmax);
             TWx = bsxfun(@times,Wx,obj.tables.mieCoefficients);
             Mx = value - TWx(:);
+            Mx = gather(Mx);
         end
         
         % ======================================================================
