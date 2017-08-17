@@ -46,6 +46,10 @@ classdef celes_tables
         %> specify the particles sizes, positions and refractive indices
         particles = celes_particles
         
+        %> celes_numerics object which contains parameters that specify the
+        %> simulation numerical settings
+        numerics = celes_numerics
+        
         %> coefficients of the regular SVWF expansion of the initial
         %> excitation 
         initialFieldCoefficients
@@ -65,7 +69,18 @@ classdef celes_tables
         %> @brief Get method for rightHandSide
         % ======================================================================
         function TaI = get.rightHandSide(obj)
-            TaI = obj.mieCoefficients(obj.particles.radiusArrayIndex,:).*obj.initialFieldCoefficients;
+            switch obj.particles.type
+                case 'sphere'
+                    TaI = obj.mieCoefficients(obj.particles.radiusArrayIndex,:).*obj.initialFieldCoefficients;
+                case 'cylinder' 
+                    TaI = zeros(obj.particles.number,obj.numerics.nmax,'single');
+                    Tcyl = obj.mieCoefficients(obj.particles.radiusArrayIndex,:,:);
+                    parfor n_i = 1:obj.particles.number
+                        TaI(n_i,:) = squeeze(Tcyl(n_i,:,:))*gather(obj.initialFieldCoefficients(n_i,:))';
+                    end
+                otherwise
+                    error('particle type not implemented');
+            end
         end
     end
 end

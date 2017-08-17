@@ -52,13 +52,14 @@ classdef celes_simulation
         %> celes_output object which contains the results of the
         %> simulation
         output
-        
+
     end
     
     properties (Dependent)
         %> single array which contains a grid of distances used for the
         %> lookup of the spherical hankel function in the particle coupling
         lookupParticleDistances
+       
     end
     
     methods
@@ -79,16 +80,21 @@ classdef celes_simulation
             switch obj.input.particles.type
                 case 'sphere'
                     obj.tables.mieCoefficients = zeros(obj.input.particles.numUniqueRadii,obj.numerics.nmax,'single');
-                for r_i=1:obj.input.particles.numUniqueRadii
-                    for tau=1:2
-                         for l=1:obj.numerics.lmax
-                             for m=-l:l
-                                jmult = multi2single_index(1,tau,l,m,obj.numerics.lmax);
-                   	            obj.tables.mieCoefficients(r_i,jmult) = T_entry(tau,l,obj.input.k_medium,obj.input.k_particle,obj.input.particles.uniqueRadii(r_i));
-                             end
-                         end
+                    for r_i=1:obj.input.particles.numUniqueRadii
+                        for tau=1:2
+                            for l=1:obj.numerics.lmax
+                                for m=-l:l
+                                    jmult = multi2single_index(1,tau,l,m,obj.numerics.lmax);
+                                    obj.tables.mieCoefficients(r_i,jmult) = T_entry(tau,l,obj.input.k_medium,obj.input.k_particle,obj.input.particles.uniqueRadii(r_i));
+                                end
+                            end
+                        end
                     end
-                end
+                case 'cylinder'
+                    obj.tables.mieCoefficients = zeros(obj.input.particles.numUniqueRadii,obj.numerics.nmax,obj.numerics.nmax,'single');
+                    for r_i=1:obj.input.particles.numUniqueRadii
+                        obj.tables.mieCoefficients(r_i,:,:) = T_block_NFDS_cylinder(obj.input.wavelength,obj.input.particles.refractiveIndex,obj.input.mediumRefractiveIndex,obj.input.particles.uniqueRadii(r_i),obj.input.particles.height,obj.numerics.lmax);
+                    end
                 otherwise
                     error('particle type not implemented')
             end
@@ -292,8 +298,20 @@ classdef celes_simulation
             value=value(:);
             Wx=coupling_matrix_multiply(obj,value);
             Wx=reshape(Wx,obj.input.particles.number,obj.numerics.nmax);
-            TWx = obj.tables.mieCoefficients(obj.input.particles.radiusArrayIndex,:).*Wx;
-            Mx = value - TWx(:);
+            switch obj.input.particles.type
+                case 'sphere'
+                    TWx = obj.tables.mieCoefficients(obj.input.particles.radiusArrayIndex,:).*Wx;
+                    Mx = value - TWx(:);
+                case 'cylinder'
+                    Tcyl = obj.tables.mieCoefficients(obj.input.particles.radiusArrayIndex,:,:);
+                    TWx = zeros(obj.input.particles.number,obj.numerics.nmax,'single');
+                    parfor n_i = 1:obj.input.particles.number
+                        TWx(n_i,:) = squeeze(Tcyl(n_i,:,:))*gather(Wx(n_i,:))';
+                    end
+                    Mx = value - TWx(:);
+                otherwise
+                    error('particle type not implemented')
+            end
         end
         
         % ======================================================================
@@ -326,8 +344,20 @@ classdef celes_simulation
             if strcmp(obj.numerics.solver.preconditioner.type,'blockdiagonal')
                 fprintf(1,'make particle partition ...');
                 partitioning = make_particle_partion(obj.input.particles.positionArray,obj.numerics.solver.preconditioner.partitionEdgeSizes);
-                obj = sort_particles_by_partition(obj,partitioning);
+                if obj.input.particles.numUniqueRadii == 1
+                    obj = sort_particles_by_partition(obj,partitioning);
+                    partitioning = make_particle_partion(obj.input.particles.positionArray,obj.numerics.solver.preconditioner.partitionEdgeSizes);
+                end
+                obj.numerics.solver.preconditioner.partitioning = partitioning;
+                fprintf(1,' done\n');
+                obj = obj.numerics.solver.preconditioner.prepare(obj);
+            elseif strcmp(obj.numerics.solver.preconditioner.type,'blockdiagonal cylinder')
+                fprintf(1,'make particle partition ...');
                 partitioning = make_particle_partion(obj.input.particles.positionArray,obj.numerics.solver.preconditioner.partitionEdgeSizes);
+                if obj.input.particles.numUniqueRadii == 1
+                    obj = sort_particles_by_partition(obj,partitioning);
+                    partitioning = make_particle_partion(obj.input.particles.positionArray,obj.numerics.solver.preconditioner.partitionEdgeSizes);
+                end
                 obj.numerics.solver.preconditioner.partitioning = partitioning;
                 fprintf(1,' done\n');
                 obj = obj.numerics.solver.preconditioner.prepare(obj);

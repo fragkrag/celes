@@ -18,12 +18,14 @@ useDS=true;
 % useDS=false;
 namestring='spheroid';
 
+
 if isunix
-    cd scattering/NFM-DS_linux/INPUTFILES/
+    %cd scattering/NFM-DS_linux/INPUTFILES/
     write_NFMDS_input_spheroid(wavelength,nM,nC,C,AB,nInt,useDS,namestring,Nrank)
-    cd ../TMATSOURCES/
+    %cd ../TMATSOURCES/
+    cd NFM-DS/TMATSOURCES/
     dlmwrite('one.txt',1)
-    system('./1_tmatrix_NFDS<one.txt')
+    system('./TMATRIX<one.txt')
     %system('./1_tmatrix_NFDS')
     cd ../TMATFILES/
     TCalc = read_NFMDS_output('TmatForTSPLspheroid.dat',Nrank);

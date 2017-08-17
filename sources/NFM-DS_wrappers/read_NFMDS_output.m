@@ -4,7 +4,9 @@ function T = read_NFMDS_output(fileName,lmax)
 % provided by Adrian Doicu and Thomas Wriedt  with the text book
 % "Light Scattering by Systems of Particles"
 
-infoData = fileread(['Info',fileName]);
+
+%infoData = fileread(['Info',fileName]);
+infoData = fileread(['sources/NFM-DS_wrappers/NFM-DS/TMATFILES/Info',fileName]);
 
 if strfind(infoData,'The scatterer is an axisymmetric particle')  % is it output from TAXYM.f90?
     NrankPos = strfind(infoData,'Nrank =');
@@ -14,7 +16,7 @@ if strfind(infoData,'The scatterer is an axisymmetric particle')  % is it output
     if Mrank<lmax
         warning('Mrank smaller than lmax')
     end
-    TRaw = dlmread(fileName,'',3,0);
+    TRaw = dlmread(['sources/NFM-DS_wrappers/NFM-DS/TMATFILES/',fileName],'',3,0);
     sz = size(TRaw);
     for j1=1:(sz(2)/2)
         TNFMDS(:,j1) = TRaw(:,2*j1-1) + 1i*TRaw(:,2*j1);   % put two real numbers to one complex

@@ -51,6 +51,9 @@ classdef celes_particles
         
         %> radii of the particles
         radiusArray
+        
+        %> height of the particles (cylinders only)
+        height
     end
     
     properties (Dependent)
@@ -75,9 +78,11 @@ classdef celes_particles
         % ======================================================================
         %> @brief Set method for type
         % ======================================================================
-        function obj = set.type(obj,value)
+        function obj=set.type(obj,value)
             switch value
                 case 'sphere'
+                    obj.type = value;
+                case 'cylinder'
                     obj.type = value;
                 otherwise
                     error('this particle type is at the moment not implemented')
@@ -87,7 +92,7 @@ classdef celes_particles
         % ======================================================================
         %> @brief Set method for disperse
         % ======================================================================
-        function obj = set.disperse(obj,value)
+        function obj=set.disperse(obj,value)
             switch value
                 case 'mono'
                     obj.disperse=value;
@@ -99,7 +104,7 @@ classdef celes_particles
         % ======================================================================
         %> @brief Set method for positionArray
         % ======================================================================
-        function obj = set.positionArray(obj,value)
+        function obj=set.positionArray(obj,value)
             if length(value(1,:))==3
                 obj.positionArray = single(value);
             else
@@ -110,56 +115,63 @@ classdef celes_particles
         % ======================================================================
         %> @brief Set method for refractive index
         % ======================================================================
-        function obj = set.refractiveIndex(obj,value)
+        function obj=set.refractiveIndex(obj,value)
             obj.refractiveIndex=single(value);
         end
         
         % ======================================================================
         %> @brief Set method for radiusArray
         % ======================================================================
-        function obj = set.radiusArray(obj,value)
+        function obj=set.radiusArray(obj,value)
             obj.radiusArray=single(value);
+        end
+        
+        % ======================================================================
+        %> @brief Set method for heightArray
+        % ======================================================================
+        function obj=set.height(obj,value)
+            obj.height=single(value);
         end
 
         % ======================================================================
         %> @brief Get method for unique radii values, returns ordered vector of unique radii
         % ======================================================================
-        function value = get.uniqueRadii(obj)
+        function value=get.uniqueRadii(obj)
             value=unique(obj.radiusArray);
         end
 
         % ======================================================================
         %> @brief Get method for the number of unique radii
         % ======================================================================
-        function value = get.numUniqueRadii(obj)
+        function value=get.numUniqueRadii(obj)
             value=length(unique(obj.radiusArray));
         end
 
         % ======================================================================
         %> @brief Get method for radius array in terms of indices given by uniqueRadii, sorted smallest to largest
         % ======================================================================
-        function value = get.radiusArrayIndex(obj)
+        function value=get.radiusArrayIndex(obj)
             value=dsearchn(obj.uniqueRadii',obj.radiusArray');
         end
 
         % ======================================================================
         %> @brief Set method for particle number
         % ======================================================================
-        function obj = set.number(obj,value)
+        function obj=set.number(obj,value)
             obj.positionArray=obj.positionArray(1:int32(value),:);
         end
         
         % ======================================================================
         %> @brief Set method for particle number
         % ======================================================================
-        function value = get.number(obj)
+        function value=get.number(obj)
             value=length(obj.positionArray(:,1));
         end
         
         % ======================================================================
         %> @brief Get method for particle number
         % ======================================================================
-        function value = get.maxParticleDistance(obj)
+        function value=get.maxParticleDistance(obj)
             %value=max(pdist(obj.positionArray));  pdist part of statistics and machine learning toolbox and might not be available
             value=0;
             for jp1=1:obj.number

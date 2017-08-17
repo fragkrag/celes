@@ -16,17 +16,19 @@ function T = T_block_NFDS_cylinder(wavelength,nC,nM,R,h,lmax)
 % In sources/NFM-DS_wrappers/NFM-DS/TMATSOURCES, an executable of the main
 % program is assumed with the name 
 
-
-nInt=200;
+nInt=2000;
 useDS=true;
 namestring='cylinder';
 Nrank=lmax;
 
-cd sources/NFM-DS_wrappers/NFM-DS/INPUTFILES/
-write_NFMDS_input_cylinder(wavelength,nM,nC,h,R,nInt,useDS,namestring,Nrank)
-cd ../TMATSOURCES/
-dlmwrite('one.txt',1)
-system('NFMDS_main.exe<one.txt')
-cd ../TMATFILES/
-T = read_NFMDS_output('TmatForTSPLcylinder.dat',lmax);
+write_NFMDS_input_cylinder(wavelength,nM,nC,h,R,nInt,useDS,namestring,Nrank);
+dlmwrite('sources/NFM-DS_wrappers/NFM-DS/TMATFILES/one.txt',1)
+cd sources/NFM-DS_wrappers/NFM-DS/TMATFILES/
+system('./TMATRIX<one.txt')
 cd ../../../..
+T = read_NFMDS_output('TmatForTSPLcylinder.dat',lmax);
+
+% figure
+% imagesc(abs(T))
+% title(strcat('r',num2str(R),' h',num2str(h)));
+

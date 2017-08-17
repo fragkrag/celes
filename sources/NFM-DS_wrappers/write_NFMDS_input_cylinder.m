@@ -4,7 +4,13 @@ function write_NFMDS_input_cylinder(wavelength,layerRefractiveIndex,particleRefr
 % writes input file for the TAXSYM.f90 routine to computes the T-matrix 
 % for a cylinder as an axially symmetric particle
 
-fID = fopen('InputAXSYM.dat','w');
+cd sources/NFM-DS_wrappers/NFM-DS/INPUTFILES
+[fID, msg] = fopen('InputAXSYM.dat','w');
+if fID == -1
+    error(msg);
+end
+
+cd ../../../..
 
 fprintf(fID,'OptProp\n');
 fprintf(fID,'%f\n',wavelength);
